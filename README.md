@@ -2,7 +2,7 @@
 [kakoune](https://kakoune.org) plugin, that displays color previews in gutter.
 
 ## Install
-Having [Nim](https://nim-lang.org) installed just do `nimble install https://github.com/SolitudeSF/colorcol`.
+Having [Nim](https://nim-lang.org) installed just do `nimble install colorcol`.
 
 Then in your `kakrc` add `evaluate-commands %sh{ colorcol }`.
 
