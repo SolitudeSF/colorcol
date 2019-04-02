@@ -2,10 +2,22 @@ import regex, os
 
 const
   kak_source = slurp "colorcol.kak"
-  regexHex = re"[0-9A-Fa-f]{6}"
+  regexHex = re"(([[:xdigit:]]{6})(?:[[:xdigit:]]{2})?|([[:xdigit:]]{3})(?:[[:xdigit:]])?)\b"
 
-template addLineColor(number: int, color, marker: string) =
-  stdout.write " ", number, "|{rgb:", color, "}", marker
+template addLine(n: int) =
+  stdout.write " ", n, "|"
+
+template addColor(color, marker: string) =
+  stdout.write "{rgb:", color, "}", marker
+
+func doubleColor(c: string): string {.noinit.} =
+  result = newString(6)
+  result[0] = c[0]
+  result[1] = c[0]
+  result[2] = c[1]
+  result[3] = c[1]
+  result[4] = c[2]
+  result[5] = c[2]
 
 if paramCount() == 0:
   stdout.write kak_source
@@ -18,12 +30,19 @@ let
 
 var
   n = 0
-  match: RegexMatch
+  lineMarked = false
 
 stdout.write "set-option buffer colorcol_marks ", timestamp
 
 if existsFile buffile:
   for line in buffile.lines:
     inc n
-    if line.find(regexHex, match):
-      addLineColor n, line[match.boundaries], marker
+    lineMarked = false
+    for match in line.findAll(regexHex):
+      if not lineMarked:
+        addLine n
+        lineMarked = true
+      for slice in match.group(1):
+        addColor line[slice], marker
+      for slice in match.group(2):
+        addColor line[slice].doubleColor, marker
