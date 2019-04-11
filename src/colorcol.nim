@@ -2,7 +2,7 @@ import regex, os
 
 const
   kak_source = slurp "colorcol.kak"
-  regexHex = re"(([[:xdigit:]]{6})(?:[[:xdigit:]]{2})?|([[:xdigit:]]{3})(?:[[:xdigit:]])?)\b"
+  regexHex = re"\b(?:([[:xdigit:]]{6})(?:[[:xdigit:]]{2})?|([[:xdigit:]]{3})(?:[[:xdigit:]])?)\b"
 
 template addLine(n: int) =
   stdout.write " ", n, "|"
@@ -42,7 +42,7 @@ if existsFile buffile:
       if not lineMarked:
         addLine n
         lineMarked = true
-      for slice in match.group(1):
+      for slice in match.group(0):
         addColor line[slice], marker
-      for slice in match.group(2):
+      for slice in match.group(1):
         addColor line[slice].doubleColor, marker
