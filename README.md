@@ -1,6 +1,8 @@
 # colorcol
 [kakoune](https://kakoune.org) plugin, that displays color previews in gutter.
 
+For now supported formats are `rgb`, `rgba`, `rrggbb`, `rrggbbaa` with optional leading `#`.
+
 ## Install
 Having [Nim](https://nim-lang.org) installed just do `nimble install colorcol`.
 
