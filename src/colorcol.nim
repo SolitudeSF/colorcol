@@ -65,13 +65,13 @@ iterator colorSlices(s: string): Slice[int] =
     else:
       if s[i].isHexadecimal:
         inc len
-        if i == s.high and len.isValid:
-          yield start..<start + len
       else:
         if len.isValid:
           yield start..<start + len
         len = 0
     inc i
+  if len.isValid:
+    yield start..<start + len
 
 proc main =
   if paramCount() == 0:
