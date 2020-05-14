@@ -8,14 +8,14 @@ func hasAlpha(s: string): bool = s.len == 5 or s.len == 9
 
 func colorNormalized(c: string): string {.noinit, inline.} =
   if c.len >= 7: return c[1..^1]
-  result = newString(c.len * 2 - 1)
+  result = newString((c.len - 1) * 2)
   result[0] = c[1]
   result[1] = c[1]
   result[2] = c[2]
   result[3] = c[2]
   result[4] = c[3]
   result[5] = c[3]
-  if c.len == 4:
+  if c.len == 5:
     result[6] = c[4]
     result[7] = c[4]
 
@@ -57,7 +57,6 @@ iterator colorSlices(s: string): Slice[int] =
     i = 0
     len = 0
     start = 0
-
   while i < s.len:
     if len == 0:
       if s[i] == '#':
@@ -72,7 +71,6 @@ iterator colorSlices(s: string): Slice[int] =
         if len.isValid:
           yield start..<start + len
         len = 0
-
     inc i
 
 proc main =
