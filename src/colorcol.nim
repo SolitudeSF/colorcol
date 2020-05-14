@@ -1,11 +1,21 @@
-import regex, os, strutils
+import regex, os
 
 const
   kakSource = slurp "colorcol.kak"
-  regexHex = re"\b#?(?:([[:xdigit:]]{6})(?:[[:xdigit:]]{2})?|([[:xdigit:]]{3})(?:[[:xdigit:]])?)\b"
+  regexHex = re"\b#(?:([[:xdigit:]]{6})(?:[[:xdigit:]]{2})?|([[:xdigit:]]{3})(?:[[:xdigit:]])?)\b"
 
-template addColor(color, marker: string) =
-  stdout.write "{rgb:", color, "}", marker
+func addColor(cmd: var string, line: int, slice: Slice[int], color: string, background = true) =
+  cmd.add "set -add buffer colorcol_ranges '"
+  cmd.add $line
+  cmd.add "."
+  cmd.add $slice.a
+  cmd.add ","
+  cmd.add $n
+  cmd.add "."
+  cmd.add $(slice.b + 1)
+  cmd.add (if background: "|default,rgb:" else: "|rgb:")
+  cmd.add color
+  cmd.add "'\n"
 
 func doubleColor(c: string): string {.noinit, inline.} =
   result = newString(6)
@@ -16,35 +26,27 @@ func doubleColor(c: string): string {.noinit, inline.} =
   result[4] = c[2]
   result[5] = c[2]
 
-if paramCount() == 0:
-  stdout.write kakSource
-  quit 0
+proc main =
+  if paramCount() == 0:
+    stdout.write kakSource
+    quit 0
 
-let
-  timestamp = paramStr 1
-  buffile = paramStr 2
-  marker = paramStr 3
-  maxMarks = parseInt paramStr 4
+  let buffile = paramStr 1
 
-var
-  n = 0
-  matches = 0
-  lineMarked = false
+  if existsFile buffile:
+    var
+      n = 0
+      cmd = ""
 
-stdout.write "set-option buffer colorcol_marks ", timestamp
+    cmd.add "unset-option buffer colorcol_ranges\nupdate-option buffer colorcol_ranges\n"
 
-if existsFile buffile:
-  for line in buffile.lines:
-    inc n
-    matches = 0
-    lineMarked = false
-    for match in line.findAll(regexHex):
-      if not lineMarked:
-        stdout.write " ", n, "|"
-        lineMarked = true
-      for slice in match.group(0):
-        addColor line[slice], marker
-      for slice in match.group(1):
-        addColor line[slice].doubleColor, marker
-      inc matches
-      if matches == maxMarks: break
+    for line in buffile.lines:
+      inc n
+      for match in line.findAll(regexHex):
+        for slice in match.group(0):
+          cmd.addColor n, slice, line[slice]
+        for slice in match.group(1):
+          cmd.addColor n, slice, line[slice].doubleColor
+    stdout.write cmd
+
+main()
