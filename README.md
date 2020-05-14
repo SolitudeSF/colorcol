@@ -1,5 +1,5 @@
 # colorcol
-[kakoune](https://kakoune.org) plugin, that displays color previews inline/near target string/in gutter.
+[kakoune](https://kakoune.org) plugin, that displays color previews inline/after target string/in gutter.
 
 For now supported formats are `#rgb` and `#rrggbb`.
 
