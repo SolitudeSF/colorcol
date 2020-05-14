@@ -48,9 +48,8 @@ func addColor(cmd: var string, color, marker: string, background: bool) =
   cmd.add (if background: "{default,rgb" else: "{rgb")
   cmd.add (if color.hasAlpha: "a:" else: ":")
   cmd.add color
-  cmd.add "}'"
+  cmd.add "}"
   cmd.add marker
-  cmd.add "'"
 
 iterator colorSlices(s: string): (int, Slice[int], string) =
   var
