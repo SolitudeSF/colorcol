@@ -6,7 +6,7 @@ declare-option bool colorcol_color_full true
 declare-option bool colorcol_background true
 declare-option str colorcol_max_flags 3
 declare-option str colorcol_flag_str █
-declare-option str colorcol_replace_str █
+declare-option str colorcol_replace_str ■
 define-command -hidden colorcol-update-highlighter %{evaluate-commands %sh{
 case "$kak_opt_colorcol_mode" in
 range) printf '%s' 'add-highlighter -override buffer/colorcol ranges colorcol_ranges';;

@@ -60,8 +60,6 @@ proc main =
     colorFull = parseBool paramStr 6
     background = parseBool paramStr 7
 
-  stderr.writeLine "Colorcol mode: ", mode
-
   if existsFile buffile:
     var
       n = 0
