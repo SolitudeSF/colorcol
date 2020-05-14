@@ -67,7 +67,8 @@ proc main =
 
     case mode
     of "range":
-      cmd.add "unset-option buffer colorcol_ranges;update-option buffer colorcol_ranges\n"
+      cmd.add "unset-option buffer colorcol_ranges\n"
+      cmd.add "update-option buffer colorcol_ranges\n"
       for line in buffile.lines:
         inc n
         for match in line.findAll(regexHex):
@@ -76,7 +77,8 @@ proc main =
           for slice in match.group(1):
             cmd.addColor n, slice, line[slice].longColor, colorFull, background
     of "replace":
-      cmd.add "unset-option buffer colorcol_replace_ranges;update-option buffer colorcol_replace_ranges\n"
+      cmd.add "unset-option buffer colorcol_replace_ranges\n"
+      cmd.add "update-option buffer colorcol_replace_ranges\n"
       for line in buffile.lines:
         inc n
         for match in line.findAll(regexHex):
@@ -88,8 +90,8 @@ proc main =
       var
         matches = 0
         lineMarked = false
-
-      cmd.add "unset-option buffer colorcol_flags;update-option buffer colorcol_flags\n"
+      cmd.add "unset-option buffer colorcol_flags\n"
+      cmd.add "update-option buffer colorcol_flags\n"
       cmd.add "set -add buffer colorcol_flags "
       for line in buffile.lines:
         inc n
