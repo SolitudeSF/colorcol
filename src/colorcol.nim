@@ -19,33 +19,32 @@ func colorNormalized(c: string): string {.noinit, inline.} =
     result[6] = c[4]
     result[7] = c[4]
 
-func addColor(cmd: var string, line: int, slice: Slice[int], color: string, colorFull, background: bool) =
+func addColor(cmd: var string, line: int, slice: Slice[int], color, style: string, colorFull: bool) =
   cmd.add "set -add buffer colorcol_ranges '"
   cmd.add $line
   cmd.add "."
   cmd.add $(slice.a + 1)
   cmd.add "+"
   cmd.add (if colorFull: $(slice.len - 1) else: "0")
-  cmd.add (if background: "|default,rgb" else: "|rgb")
+  cmd.add style
   cmd.add (if color.hasAlpha: "a:" else: ":")
   cmd.add color
   cmd.add "'\n"
 
-func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: string, background: bool) =
+func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: string) =
   cmd.add "set -add buffer colorcol_replace_ranges '"
   cmd.add $line
   cmd.add "."
   cmd.add $(slice.b + 2)
-  cmd.add "+0"
-  cmd.add (if background: "|{default,rgb" else: "|{rgb")
+  cmd.add "+0|{rgb"
   cmd.add (if color.hasAlpha: "a:" else: ":")
   cmd.add color
   cmd.add "}"
   cmd.add marker
   cmd.add "'\n"
 
-func addColor(cmd: var string, color, marker: string, background: bool) =
-  cmd.add (if background: "{default,rgb" else: "{rgb")
+func addColor(cmd: var string, color, marker: string) =
+  cmd.add "{rgb"
   cmd.add (if color.hasAlpha: "a:" else: ":")
   cmd.add color
   cmd.add "}"
@@ -92,9 +91,9 @@ proc main =
     mode = paramStr 2
     maxMarks = parseInt paramStr 3
     flagMarker = paramStr 4
-    replaceMarker = paramStr 5
+    appendMarker = paramStr 5
     colorFull = parseBool paramStr 6
-    background = parseBool paramStr 7
+    style = if mode == "background": "|default,rgb" else: "|rgb"
 
   if existsFile buffile:
     let data = buffile.readFile
@@ -103,16 +102,16 @@ proc main =
       cmd = ""
 
     case mode
-    of "range":
+    of "background", "foreground":
       cmd.add "unset-option buffer colorcol_ranges\n"
       cmd.add "update-option buffer colorcol_ranges\n"
       for line, slice, color in data.colorSlices:
-        cmd.addColor line, slice, color, colorFull, background
-    of "replace":
+        cmd.addColor line, slice, color, style, colorFull
+    of "append":
       cmd.add "unset-option buffer colorcol_replace_ranges\n"
       cmd.add "update-option buffer colorcol_replace_ranges\n"
       for line, slice, color in data.colorSlices:
-        cmd.addColor line, slice, color, replaceMarker, background
+        cmd.addColor line, slice, color, appendMarker
     of "flag":
       var
         matches = 0
@@ -128,7 +127,7 @@ proc main =
           cmd.add $line
           cmd.add "|"
         if matches != maxMarks:
-          cmd.addColor color, flagMarker, background
+          cmd.addColor color, flagMarker
           inc matches
     else:
       stderr.writeLine "Unknown mode: " & mode
