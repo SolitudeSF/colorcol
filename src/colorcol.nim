@@ -30,8 +30,9 @@ func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: stri
 func addColor(cmd: var string, color, marker: string, background = false) =
   cmd.add (if background: "{default,rgb:" else: "{rgb:")
   cmd.add color
-  cmd.add "}"
+  cmd.add "}'"
   cmd.add marker
+  cmd.add "'"
 
 func longColor(c: string): string {.noinit, inline.} =
   result = newString(c.len * 2)
