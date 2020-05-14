@@ -4,18 +4,18 @@ const
   kakSource = slurp "colorcol.kak"
   regexHex = re"\b#(?:([[:xdigit:]]{6})(?:[[:xdigit:]]{2})?|([[:xdigit:]]{3})(?:[[:xdigit:]])?)\b"
 
-func addColor(cmd: var string, line: int, slice: Slice[int], color: string, background = true) =
+func addColor(cmd: var string, line: int, slice: Slice[int], color: string, colorFull, background: bool) =
   cmd.add "set -add buffer colorcol_ranges '"
   cmd.add $line
   cmd.add "."
   cmd.add $slice.a
   cmd.add "+"
-  cmd.add $slice.len
+  cmd.add (if colorFull: $slice.len else: "0")
   cmd.add (if background: "|default,rgb:" else: "|rgb:")
   cmd.add color
   cmd.add "'\n"
 
-func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: string, background = false) =
+func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: string, background: bool) =
   cmd.add "set -add buffer colorcol_replace_ranges '"
   cmd.add $line
   cmd.add "."
@@ -27,7 +27,7 @@ func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: stri
   cmd.add marker
   cmd.add "'\n"
 
-func addColor(cmd: var string, color, marker: string, background = false) =
+func addColor(cmd: var string, color, marker: string, background: bool) =
   cmd.add (if background: "{default,rgb:" else: "{rgb:")
   cmd.add color
   cmd.add "}'"
@@ -57,6 +57,8 @@ proc main =
     maxMarks = parseInt paramStr 3
     flagMarker = paramStr 4
     replaceMarker = paramStr 5
+    colorFull = parseBool paramStr 6
+    background = parseBool paramStr 7
 
   stderr.writeLine "Colorcol mode: ", mode
 
@@ -72,18 +74,18 @@ proc main =
         inc n
         for match in line.findAll(regexHex):
           for slice in match.group(0):
-            cmd.addColor n, slice, line[slice]
+            cmd.addColor n, slice, line[slice], colorFull, background
           for slice in match.group(1):
-            cmd.addColor n, slice, line[slice].longColor
+            cmd.addColor n, slice, line[slice].longColor, colorFull, background
     of "replace":
       cmd.add "unset-option buffer colorcol_replace_ranges;update-option buffer colorcol_replace_ranges\n"
       for line in buffile.lines:
         inc n
         for match in line.findAll(regexHex):
           for slice in match.group(0):
-            cmd.addColor n, slice, line[slice], replaceMarker
+            cmd.addColor n, slice, line[slice], replaceMarker, background
           for slice in match.group(1):
-            cmd.addColor n, slice, line[slice].longColor, replaceMarker
+            cmd.addColor n, slice, line[slice].longColor, replaceMarker, background
     of "flag":
       var
         matches = 0
@@ -102,9 +104,9 @@ proc main =
             cmd.add $n
             cmd.add "|"
           for slice in match.group(0):
-            cmd.addColor line[slice], flagMarker
+            cmd.addColor line[slice], flagMarker, background
           for slice in match.group(1):
-            cmd.addColor line[slice].longColor, flagMarker
+            cmd.addColor line[slice].longColor, flagMarker, background
           inc matches
           if matches == maxMarks: break
     else:
