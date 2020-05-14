@@ -10,4 +10,4 @@ bin           = @["colorcol"]
 
 # Dependencies
 
-requires "nim >= 1.0.0", "regex >= 0.10.1"
+requires "nim >= 1.0.0"
