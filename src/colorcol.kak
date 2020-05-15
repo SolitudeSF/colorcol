@@ -2,6 +2,7 @@ declare-option -hidden range-specs colorcol_ranges
 declare-option -hidden range-specs colorcol_replace_ranges
 declare-option -hidden line-specs colorcol_flags
 declare-option -hidden str colorcol_mode append
+declare-option -hidden str colorcol_command_file
 
 declare-option bool colorcol_color_full true
 declare-option str colorcol_max_flags 3
@@ -16,10 +17,13 @@ define-command -hidden colorcol-update-highlighter %{evaluate-commands %sh{
     *) printf '%s' "echo -debug 'Unknown colorcol mode: $kak_opt_colorcol_mode'";;
   esac
 }}
-
-define-command colorcol-refresh %{evaluate-commands %sh{
-  colorcol "$kak_buffile" "$kak_opt_colorcol_mode" "$kak_opt_colorcol_max_flags" "$kak_opt_colorcol_flag_str" "$kak_opt_colorcol_append_str" "$kak_opt_colorcol_color_full"
+define-command colorcol-refresh %{ evaluate-commands -draft %{
+  execute-keys '%'
+  execute-keys "<a-|> colorcol %opt{colorcol_mode} %opt{colorcol_max_flags} %opt{colorcol_flag_str} %opt{colorcol_append_str} %opt{colorcol_color_full} >%opt{colorcol_command_file}<ret>"
+  source %opt{colorcol_command_file}
+  nop %sh{ rm -f "$kak_opt_colorcol_command_file" }
 }}
+
 define-command colorcol-mode -params 1 -shell-script-candidates %{
   printf '%s\n%s\n%s\n%s' background foreground append flag
 } -docstring "Change colorcol mode (background/foreground/append/flag)" %{
@@ -27,11 +31,22 @@ define-command colorcol-mode -params 1 -shell-script-candidates %{
   colorcol-refresh
   colorcol-update-highlighter
 }
+
 define-command colorcol-enable %{
-  colorcol-refresh
+  set buffer colorcol_command_file %sh{ mktemp --tmpdir colorcolXXXXX }
   colorcol-update-highlighter
+  hook -group colorcol global BufCreate .* colorcol-refresh
+}
+
+define-command colorcol-refresh-continuous %{
+  hook -group colorcol global NormalIdle .* colorcol-refresh
+  hook -group colorcol global InsertIdle .* colorcol-refresh
+}
+
+define-command colorcol-refresh-on-save %{
   hook -group colorcol global BufWritePost .* colorcol-refresh
 }
+
 define-command colorcol-disable %{
   remove-highlighter window/colorcol
   remove-hooks global colorcol

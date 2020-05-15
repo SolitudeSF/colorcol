@@ -87,51 +87,49 @@ proc main =
     quit 0
 
   let
-    buffile = paramStr 1
-    mode = paramStr 2
-    maxMarks = parseInt paramStr 3
-    flagMarker = paramStr 4
-    appendMarker = paramStr 5
-    colorFull = parseBool paramStr 6
+    mode = paramStr 1
+    maxMarks = parseInt paramStr 2
+    flagMarker = paramStr 3
+    appendMarker = paramStr 4
+    colorFull = parseBool paramStr 5
     style = if mode == "background": "|default,rgb:" else: "|rgb:"
 
-  if existsFile buffile:
-    let data = buffile.readFile
-    var
-      n = 0
-      cmd = ""
+  let data = stdin.readAll
+  var
+    n = 0
+    cmd = ""
 
-    case mode
-    of "background", "foreground":
-      cmd.add "unset-option buffer colorcol_ranges\n"
-      cmd.add "update-option buffer colorcol_ranges\n"
-      for line, slice, color in data.colorSlices:
-        cmd.addColor line, slice, color, style, colorFull
-    of "append":
-      cmd.add "unset-option buffer colorcol_replace_ranges\n"
-      cmd.add "update-option buffer colorcol_replace_ranges\n"
-      for line, slice, color in data.colorSlices:
-        cmd.addColor line, slice, color, appendMarker
-    of "flag":
-      var
+  case mode
+  of "background", "foreground":
+    cmd.add "unset-option buffer colorcol_ranges\n"
+    cmd.add "update-option buffer colorcol_ranges\n"
+    for line, slice, color in data.colorSlices:
+      cmd.addColor line, slice, color, style, colorFull
+  of "append":
+    cmd.add "unset-option buffer colorcol_replace_ranges\n"
+    cmd.add "update-option buffer colorcol_replace_ranges\n"
+    for line, slice, color in data.colorSlices:
+      cmd.addColor line, slice, color, appendMarker
+  of "flag":
+    var
+      matches = 0
+      currentLine = 0
+    cmd.add "unset-option buffer colorcol_flags\n"
+    cmd.add "update-option buffer colorcol_flags\n"
+    cmd.add "set -add buffer colorcol_flags "
+    for line, _, color in data.colorSlices:
+      if line != currentLine:
         matches = 0
-        currentLine = 0
-      cmd.add "unset-option buffer colorcol_flags\n"
-      cmd.add "update-option buffer colorcol_flags\n"
-      cmd.add "set -add buffer colorcol_flags "
-      for line, _, color in data.colorSlices:
-        if line != currentLine:
-          matches = 0
-          currentLine = line
-          cmd.add " "
-          cmd.add $line
-          cmd.add "|"
-        if matches != maxMarks:
-          cmd.addColor color, flagMarker
-          inc matches
-    else:
-      stderr.writeLine "Unknown mode: " & mode
-      quit 1
-    stdout.write cmd
+        currentLine = line
+        cmd.add " "
+        cmd.add $line
+        cmd.add "|"
+      if matches != maxMarks:
+        cmd.addColor color, flagMarker
+        inc matches
+  else:
+    stderr.writeLine "Unknown mode: " & mode
+    quit 1
+  stdout.write cmd
 
 main()
