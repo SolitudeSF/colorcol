@@ -10,9 +10,9 @@ declare-option str colorcol_append_str ■
 
 define-command -hidden colorcol-update-highlighter %{evaluate-commands %sh{
   case "$kak_opt_colorcol_mode" in
-    background|foreground) printf '%s' 'add-highlighter -override buffer/colorcol ranges colorcol_ranges';;
-    append) printf '%s' 'add-highlighter -override buffer/colorcol replace-ranges colorcol_replace_ranges';;
-    flag) printf '%s' 'add-highlighter -override buffer/colorcol flag-lines default colorcol_flags';;
+    background|foreground) printf '%s' 'add-highlighter -override window/colorcol ranges colorcol_ranges';;
+    append) printf '%s' 'add-highlighter -override window/colorcol replace-ranges colorcol_replace_ranges';;
+    flag) printf '%s' 'add-highlighter -override window/colorcol flag-lines default colorcol_flags';;
     *) printf '%s' "echo -debug 'Unknown colorcol mode: $kak_opt_colorcol_mode'";;
   esac
 }}
@@ -33,6 +33,6 @@ define-command colorcol-enable %{
   hook -group colorcol global BufWritePost .* colorcol-refresh
 }
 define-command colorcol-disable %{
-  remove-highlighter buffer/colorcol
+  remove-highlighter window/colorcol
   remove-hooks global colorcol
 }
