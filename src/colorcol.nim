@@ -4,30 +4,32 @@ const kakSource = slurp "colorcol.kak"
 
 func isHexadecimal(c: char): bool = c in {'0'..'9', 'a'..'f', 'A'..'F'}
 func isValid(i: int): bool = i == 4 or i == 5 or i == 7 or i == 9
-func hasAlpha(s: string): bool = s.len == 5 or s.len == 9
 
-func colorNormalized(c: string): string {.noinit, inline.} =
-  if c.len >= 7: return c[1..^1]
-  result = newString((c.len - 1) * 2)
-  result[0] = c[1]
-  result[1] = c[1]
-  result[2] = c[2]
-  result[3] = c[2]
-  result[4] = c[3]
-  result[5] = c[3]
-  if c.len == 5:
-    result[6] = c[4]
-    result[7] = c[4]
+func normalizedColor(str: string, s: Slice[int]): string {.noinit, inline.} =
+  if s.len == 6: return str[s]
+  elif s.len == 8: return str[s.a..s.b - 2]
+  result = newString(6)
+  result[0] = str[s.a]
+  result[1] = str[s.a]
+  result[2] = str[s.a + 1]
+  result[3] = str[s.a + 1]
+  result[4] = str[s.a + 2]
+  result[5] = str[s.a + 2]
 
 func addColor(cmd: var string, line: int, slice: Slice[int], color, style: string, colorFull: bool) =
   cmd.add "set -add buffer colorcol_ranges '"
   cmd.add $line
   cmd.add "."
   cmd.add $(slice.a + 1)
-  cmd.add "+"
-  cmd.add (if colorFull: $(slice.len - 1) else: "0")
+  if colorFull:
+    cmd.add "+"
+    cmd.add $(slice.len - 1)
+  else:
+    cmd.add ","
+    cmd.add $line
+    cmd.add "."
+    cmd.add $(slice.a + 1)
   cmd.add style
-  cmd.add (if color.hasAlpha: "a:" else: ":")
   cmd.add color
   cmd.add "'\n"
 
@@ -36,16 +38,14 @@ func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: stri
   cmd.add $line
   cmd.add "."
   cmd.add $(slice.b + 2)
-  cmd.add "+0|{rgb"
-  cmd.add (if color.hasAlpha: "a:" else: ":")
+  cmd.add "+0|{rgb:"
   cmd.add color
   cmd.add "}"
   cmd.add marker
   cmd.add "'\n"
 
 func addColor(cmd: var string, color, marker: string) =
-  cmd.add "{rgb"
-  cmd.add (if color.hasAlpha: "a:" else: ":")
+  cmd.add "{rgb:"
   cmd.add color
   cmd.add "}"
   cmd.add marker
@@ -71,7 +71,7 @@ iterator colorSlices(s: string): (int, Slice[int], string) =
       else:
         if len.isValid:
           yield (line, start - linestart..<start - linestart + len,
-            s[start..<start + len].colorNormalized)
+            normalizedColor(s, start + 1..<start + len))
         if s[i] == '\n':
           inc line
           linestart = i + 1
@@ -79,7 +79,7 @@ iterator colorSlices(s: string): (int, Slice[int], string) =
     inc i
   if len.isValid:
     yield (line, start - linestart..<start - linestart + len,
-      s[start..<start + len].colorNormalized)
+      normalizedColor(s, start + 1..<start + len))
 
 proc main =
   if paramCount() == 0:
@@ -93,7 +93,7 @@ proc main =
     flagMarker = paramStr 4
     appendMarker = paramStr 5
     colorFull = parseBool paramStr 6
-    style = if mode == "background": "|default,rgb" else: "|rgb"
+    style = if mode == "background": "|default,rgb:" else: "|rgb:"
 
   if existsFile buffile:
     let data = buffile.readFile
