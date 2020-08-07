@@ -2,21 +2,29 @@ import os, strutils
 
 const kakSource = slurp "colorcol.kak"
 
+type Color = array[6, char]
+
 func isHexadecimal(c: char): bool = c in {'0'..'9', 'a'..'f', 'A'..'F'}
 func isValid(i: int): bool = i == 4 or i == 5 or i == 7 or i == 9
 
-func normalizedColor(str: string, s: Slice[int]): string {.noinit, inline.} =
-  if s.len == 6: return str[s]
-  elif s.len == 8: return str[s.a..s.b - 2]
-  result = newString(6)
-  result[0] = str[s.a]
-  result[1] = str[s.a]
-  result[2] = str[s.a + 1]
-  result[3] = str[s.a + 1]
-  result[4] = str[s.a + 2]
-  result[5] = str[s.a + 2]
+func normalizedColor(str: string, start, len: int): Color {.inline.} =
+  if len >= 6:
+    copyMem addr result, unsafeAddr str[start], sizeof Color
+  else:
+    result[0] = str[start]
+    result[1] = str[start]
+    result[2] = str[start + 1]
+    result[3] = str[start + 1]
+    result[4] = str[start + 2]
+    result[5] = str[start + 2]
 
-func addColor(cmd: var string, line: int, slice: Slice[int], color, style: string, colorFull: bool) =
+func add(s: var string, a: openArray[char]) =
+  let l = s.len
+  s.setLen(s.len + a.len)
+  copyMem addr s[l], unsafeAddr a[0], a.len
+
+func addColor(cmd: var string, line: int, slice: Slice[int],
+  color: Color, style: string, colorFull: bool) =
   cmd.add "set -add buffer colorcol_ranges '"
   cmd.add $line
   cmd.add "."
@@ -30,7 +38,7 @@ func addColor(cmd: var string, line: int, slice: Slice[int], color, style: strin
   cmd.add color
   cmd.add "'\n"
 
-func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: string) =
+func addColor(cmd: var string, line: int, slice: Slice[int], color: Color, marker: string) =
   cmd.add "set -add buffer colorcol_replace_ranges '"
   cmd.add $line
   cmd.add "."
@@ -41,13 +49,13 @@ func addColor(cmd: var string, line: int, slice: Slice[int], color, marker: stri
   cmd.add marker
   cmd.add "'\n"
 
-func addColor(cmd: var string, color, marker: string) =
+func addColor(cmd: var string, color: Color, marker: string) =
   cmd.add "{rgb:"
   cmd.add color
   cmd.add "}"
   cmd.add marker
 
-iterator colorSlices(s: string): (int, Slice[int], string) =
+iterator colorSlices(s: string): (int, Slice[int], Color) =
   var
     i = 0
     len = 0
@@ -68,7 +76,7 @@ iterator colorSlices(s: string): (int, Slice[int], string) =
       else:
         if not s[i].isAlphaNumeric and len.isValid:
           yield (line, start - linestart..<start - linestart + len,
-            normalizedColor(s, start + 1..<start + len))
+            normalizedColor(s, start + 1, len))
         if s[i] == '\n':
           inc line
           linestart = i + 1
@@ -76,7 +84,7 @@ iterator colorSlices(s: string): (int, Slice[int], string) =
     inc i
   if len.isValid:
     yield (line, start - linestart..<start - linestart + len,
-      normalizedColor(s, start + 1..<start + len))
+      normalizedColor(s, start + 1, len))
 
 proc main =
   if paramCount() == 0:

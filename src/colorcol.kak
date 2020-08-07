@@ -9,7 +9,7 @@ declare-option str colorcol_max_flags 3
 declare-option str colorcol_flag_str █
 declare-option str colorcol_append_str ■
 
-define-command -hidden colorcol-update-highlighter %{evaluate-commands %sh{
+define-command -hidden colorcol-update-highlighter %{ evaluate-commands %sh{
   case "$kak_opt_colorcol_mode" in
     background|foreground) printf '%s' 'add-highlighter -override window/colorcol ranges colorcol_ranges';;
     append) printf '%s' 'add-highlighter -override window/colorcol replace-ranges colorcol_replace_ranges';;
@@ -17,6 +17,7 @@ define-command -hidden colorcol-update-highlighter %{evaluate-commands %sh{
     *) printf '%s' "echo -debug 'Unknown colorcol mode: $kak_opt_colorcol_mode'";;
   esac
 }}
+
 define-command colorcol-refresh %{ evaluate-commands -draft %{
   execute-keys '%'
   execute-keys "<a-|> colorcol %opt{colorcol_mode} %opt{colorcol_max_flags} %opt{colorcol_flag_str} %opt{colorcol_append_str} %opt{colorcol_color_full} >%opt{colorcol_command_file}<ret>"
