@@ -23,12 +23,9 @@ func addColor(cmd: var string, line: int, slice: Slice[int], color, style: strin
   cmd.add $(slice.a + 1)
   if colorFull:
     cmd.add "+"
-    cmd.add $(slice.len - 1)
+    cmd.add $slice.len
   else:
-    cmd.add ","
-    cmd.add $line
-    cmd.add "."
-    cmd.add $(slice.a + 1)
+    cmd.add "+1"
   cmd.add style
   cmd.add color
   cmd.add "'\n"
