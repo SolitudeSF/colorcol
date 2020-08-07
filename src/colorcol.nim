@@ -66,7 +66,7 @@ iterator colorSlices(s: string): (int, Slice[int], string) =
       if s[i].isHexadecimal:
         inc len
       else:
-        if len.isValid:
+        if not s[i].isAlphaNumeric and len.isValid:
           yield (line, start - linestart..<start - linestart + len,
             normalizedColor(s, start + 1..<start + len))
         if s[i] == '\n':
