@@ -5,7 +5,7 @@ const kakSource = slurp "colorcol.kak"
 type Color = array[6, char]
 
 func isHexadecimal(c: char): bool = c in {'0'..'9', 'a'..'f', 'A'..'F'}
-func isValid(i: int): bool = i == 4 or i == 5 or i == 7 or i == 9
+func isValid(i: int): bool = i == 3 or i == 4 or i == 6 or i == 8
 
 func normalizedColor(str: string, start, len: int): Color {.inline.} =
   if len >= 6:
@@ -62,11 +62,18 @@ iterator colorSlices(s: string): (int, Slice[int], Color) =
     line = 1
     linestart = 0
     start = 0
-  while i < s.len:
+    color_prefix = 0
+  while i < s.len - 3:
     if len == 0:
       if s[i] == '#':
         start = i
+        color_prefix = 1
         len = 1
+      elif s[i .. i+3] == "rgb:":
+        start = i
+        color_prefix = 4
+        len = 4
+        i += 3
       elif s[i] == '\n':
         inc line
         linestart = i + 1
@@ -74,9 +81,9 @@ iterator colorSlices(s: string): (int, Slice[int], Color) =
       if s[i].isHexadecimal:
         inc len
       else:
-        if not s[i].isAlphaNumeric and len.isValid:
+        if not s[i].isAlphaNumeric and (len - color_prefix).isValid:
           yield (line, start - linestart..<start - linestart + len,
-            normalizedColor(s, start + 1, len))
+            normalizedColor(s, start + color_prefix, len))
         if s[i] == '\n':
           inc line
           linestart = i + 1
