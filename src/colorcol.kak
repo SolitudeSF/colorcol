@@ -5,7 +5,7 @@ declare-option -hidden str colorcol_mode append
 declare-option -hidden str colorcol_command_file
 
 declare-option bool colorcol_color_full true
-declare-option str colorcol_max_flags 3
+declare-option int colorcol_max_flags 3
 declare-option str colorcol_flag_str █
 declare-option str colorcol_append_str ■
 
@@ -28,24 +28,25 @@ define-command colorcol-refresh %{ evaluate-commands -draft %{
 define-command colorcol-mode -params 1 -shell-script-candidates %{
   printf '%s\n%s\n%s\n%s' background foreground append flag
 } -docstring "Change colorcol mode (background/foreground/append/flag)" %{
-  set buffer colorcol_mode %arg{1}
+  set window colorcol_mode %arg{1}
   colorcol-refresh
   colorcol-update-highlighter
 }
 
 define-command colorcol-enable %{
-  set buffer colorcol_command_file %sh{ mktemp --tmpdir colorcolXXXXX }
+  set window colorcol_command_file %sh{ mktemp --tmpdir colorcolXXXXX }
   colorcol-update-highlighter
-  hook -group colorcol global BufCreate .* colorcol-refresh
+  colorcol-refresh
+  hook -group colorcol window BufCreate .* colorcol-refresh
 }
 
 define-command colorcol-refresh-continuous %{
-  hook -group colorcol global NormalIdle .* colorcol-refresh
-  hook -group colorcol global InsertIdle .* colorcol-refresh
+  hook -group colorcol window NormalIdle .* colorcol-refresh
+  hook -group colorcol window InsertIdle .* colorcol-refresh
 }
 
 define-command colorcol-refresh-on-save %{
-  hook -group colorcol global BufWritePost .* colorcol-refresh
+  hook -group colorcol window BufWritePost .* colorcol-refresh
 }
 
 define-command colorcol-disable %{
