@@ -62,28 +62,28 @@ iterator colorSlices(s: string): (int, Slice[int], Color) =
     line = 1
     linestart = 0
     start = 0
-    color_prefix = 0
+    colorPrefix = 0
   while i < s.len - 3:
     if len == 0:
       if s[i] == '#':
         start = i
-        color_prefix = 1
+        colorPrefix = 1
         len = 1
-      elif s[i .. i+3] == "rgb:":
-        start = i
-        color_prefix = 4
-        len = 4
-        i += 3
       elif s[i] == '\n':
         inc line
         linestart = i + 1
+      elif s[i..i + 3] == "rgb:":
+        start = i
+        colorPrefix = 4
+        len = 4
+        i += 3
     else:
       if s[i].isHexadecimal:
         inc len
       else:
-        if not s[i].isAlphaNumeric and (len - color_prefix).isValid:
+        if not s[i].isAlphaNumeric and (len - colorPrefix).isValid:
           yield (line, start - linestart..<start - linestart + len,
-            normalizedColor(s, start + color_prefix, len))
+            normalizedColor(s, start + colorPrefix, len))
         if s[i] == '\n':
           inc line
           linestart = i + 1
@@ -107,9 +107,7 @@ proc main =
     style = if mode == "background": "|default,rgb:" else: "|rgb:"
 
   let data = stdin.readAll
-  var
-    n = 0
-    cmd = ""
+  var cmd = ""
 
   case mode
   of "background", "foreground":
