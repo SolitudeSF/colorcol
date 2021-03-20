@@ -103,8 +103,6 @@ iterator colorSlices(s: string): (int, Slice[int], Color) =
           linestart = i + 1
         else:
           discard
-
-      stderr.writeLine prefix
     else:
       if s[i].isHexadecimal:
         inc len
