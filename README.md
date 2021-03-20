@@ -10,6 +10,8 @@ Then in your `kakrc` add `evaluate-commands %sh{ colorcol }`.
 
 Now you can use `colorcol-enable` to activate the plugin and `colorcol-refresh`/`colorcol-refresh-on-save`/`colorcol-refresh-continuous` to recolor buffer manually/on save/as you type.
 
+You can change color display mode with `colorcol-mode background/foreground/append/flag`.
+
 ## Recommended setup
 ```
 evaluate-commands %sh{ colorcol }
