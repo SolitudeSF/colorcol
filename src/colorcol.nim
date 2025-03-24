@@ -1,4 +1,4 @@
-import os, strutils
+import std/[os, strutils]
 
 const kakSource = slurp "colorcol.kak"
 
@@ -29,12 +29,12 @@ func add(s: var string, a: openArray[char]) =
 func addColor(cmd: var string, line: int, slice: Slice[int],
   color: Color, style: string, colorFull: bool) =
   cmd.add "set -add buffer colorcol_ranges '"
-  cmd.add $line
-  cmd.add "."
-  cmd.add $(slice.a + 1)
+  cmd.addInt line
+  cmd.add '.'
+  cmd.addInt slice.a + 1
   if colorFull:
-    cmd.add "+"
-    cmd.add $slice.len
+    cmd.add '+'
+    cmd.addInt slice.len
   else:
     cmd.add "+1"
   cmd.add style
@@ -43,19 +43,19 @@ func addColor(cmd: var string, line: int, slice: Slice[int],
 
 func addColor(cmd: var string, line: int, slice: Slice[int], color: Color, marker: string) =
   cmd.add "set -add buffer colorcol_replace_ranges '"
-  cmd.add $line
-  cmd.add "."
-  cmd.add $(slice.b + 2)
+  cmd.addInt line
+  cmd.add '.'
+  cmd.addInt slice.b + 2
   cmd.add "+0|{rgb:"
   cmd.add color
-  cmd.add "}"
+  cmd.add '}'
   cmd.add marker
   cmd.add "'\n"
 
 func addColor(cmd: var string, color: Color, marker: string) =
   cmd.add "{rgb:"
   cmd.add color
-  cmd.add "}"
+  cmd.add '}'
   cmd.add marker
 
 iterator colorSlices(s: string): (int, Slice[int], Color) =
@@ -114,9 +114,9 @@ iterator colorSlices(s: string): (int, Slice[int], Color) =
           linestart = i + 1
         len = 0
     inc i
-  if (len - prefixLen).isValid: submit(s, line, linestart, start, len, prefixLen)
+  if isValid len - prefixLen: submit(s, line, linestart, start, len, prefixLen)
 
-proc main =
+proc colorcol =
   if paramCount() == 0:
     stdout.write kakSource
     quit 0
@@ -127,9 +127,10 @@ proc main =
     flagMarker = paramStr 3
     appendMarker = paramStr 4
     colorFull = parseBool paramStr 5
+    responseFifo = paramStr 6
+    data = responseFifo.readFile
     style = if mode == "background": "|default,rgb:" else: "|rgb:"
 
-  let data = stdin.readAll
   var cmd = ""
 
   case mode
@@ -155,7 +156,7 @@ proc main =
         matches = 0
         currentLine = line
         cmd.add " "
-        cmd.add $line
+        cmd.addInt line
         cmd.add "|"
       if matches != maxMarks:
         cmd.addColor color, flagMarker
@@ -165,4 +166,4 @@ proc main =
     quit 1
   stdout.write cmd
 
-main()
+colorcol()

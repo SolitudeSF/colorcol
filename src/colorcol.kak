@@ -1,3 +1,4 @@
+declare-option -hidden int colorcol_timestamp 0
 declare-option -hidden range-specs colorcol_ranges
 declare-option -hidden range-specs colorcol_replace_ranges
 declare-option -hidden line-specs colorcol_flags
@@ -18,12 +19,16 @@ define-command -hidden colorcol-update-highlighter %{ evaluate-commands %sh{
   esac
 }}
 
-define-command colorcol-refresh %{ evaluate-commands -draft %{
-  execute-keys '%'
-  execute-keys "<a-|> colorcol %opt{colorcol_mode} %opt{colorcol_max_flags} %opt{colorcol_flag_str} %opt{colorcol_append_str} %opt{colorcol_color_full} >%opt{colorcol_command_file}<ret>"
-  source %opt{colorcol_command_file}
-  nop %sh{ rm -f "$kak_opt_colorcol_command_file" }
-}}
+define-command colorcol-refresh %{ evaluate-commands %sh{
+  [ "$kak_opt_colorcol_timestamp" -eq "$kak_timestamp" ] && exit
+	printf %s "evaluate-commands -draft -no-hooks %{
+		execute-keys '%'
+		echo -to-file '$kak_response_fifo' %val{selection}
+	}" >"$kak_command_fifo"
+  colorcol "$kak_opt_colorcol_mode" "$kak_opt_colorcol_max_flags" "$kak_opt_colorcol_flag_str" "$kak_opt_colorcol_append_str" "$kak_opt_colorcol_color_full" "$kak_response_fifo"
+  }
+  set window colorcol_timestamp %val{timestamp}
+}
 
 define-command colorcol-mode -params 1 -shell-script-candidates %{
   printf '%s\n%s\n%s\n%s' background foreground append flag
@@ -34,7 +39,6 @@ define-command colorcol-mode -params 1 -shell-script-candidates %{
 }
 
 define-command colorcol-enable %{
-  set window colorcol_command_file %sh{ mktemp --tmpdir colorcolXXXXX }
   colorcol-update-highlighter
   colorcol-refresh
   hook -group colorcol window BufCreate .* colorcol-refresh
@@ -51,5 +55,5 @@ define-command colorcol-refresh-on-save %{
 
 define-command colorcol-disable %{
   remove-highlighter window/colorcol
-  remove-hooks global colorcol
+  remove-hooks window colorcol
 }
