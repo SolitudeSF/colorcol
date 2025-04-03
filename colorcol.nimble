@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.5.3"
+version       = "0.5.4"
 author        = "SolitudeSF"
 description   = "Kakoune plugin for color preview"
 license       = "MIT"
