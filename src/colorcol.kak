@@ -23,7 +23,7 @@ define-command colorcol-refresh %{ evaluate-commands %sh{
   [ "$kak_opt_colorcol_timestamp" -eq "$kak_timestamp" ] && exit
 	printf %s "evaluate-commands -draft -no-hooks %{
 		execute-keys '%'
-		echo -to-file '$kak_response_fifo' %val{selection}
+		echo -to-file '$kak_response_fifo' -- %val{selection}
 	}" >"$kak_command_fifo"
   colorcol "$kak_opt_colorcol_mode" "$kak_opt_colorcol_max_flags" "$kak_opt_colorcol_flag_str" "$kak_opt_colorcol_append_str" "$kak_opt_colorcol_color_full" "$kak_response_fifo"
   }
